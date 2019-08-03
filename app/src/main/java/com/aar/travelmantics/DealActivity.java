@@ -2,6 +2,7 @@ package com.aar.travelmantics;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -26,12 +27,11 @@ public class DealActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insert);
-        FirebaseUtil.openFbReference("traveldeals");
         mFirebaseDatabase = FirebaseUtil.mFirebaseDatabase;
         mDatabaseReference = FirebaseUtil.mDatabaseReference;
-        txtTitle = findViewById(R.id.txtTitle);
+        txtTitle =  findViewById(R.id.txtTitle);
         txtDescription = findViewById(R.id.txtDescription);
-        txtPrice = findViewById((R.id.txtPrice));
+        txtPrice =  findViewById(R.id.txtPrice);
         Intent intent = getIntent();
         TravelDeal deal = (TravelDeal) intent.getSerializableExtra("Deal");
         if (deal==null) {
@@ -48,11 +48,17 @@ public class DealActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.save_menu:
                 saveDeal();
-                Toast.makeText(this, "Deal saved", Toast.LENGTH_LONG). show();
+                Toast.makeText(this, "Deal saved", Toast.LENGTH_LONG).show();
                 clean();
+                backToList();
                 return true;
-                default:
-                    return super.onOptionsItemSelected(item);
+            case R.id.delete_menu:
+                deleteDeal();
+                Toast.makeText(this, "Deal Deleted", Toast.LENGTH_LONG).show();
+                backToList();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -64,12 +70,31 @@ public class DealActivity extends AppCompatActivity {
     }
 
     private void saveDeal() {
-        String title = txtTitle.getText().toString();
-        String description = txtDescription.getText().toString();
-        String price = txtPrice.getText().toString();
-        TravelDeal deal = new TravelDeal(title, description, price, "");
-        mDatabaseReference.push().setValue(deal);
+        deal.setTitle(txtTitle.getText().toString());
+        deal.setDescription(txtDescription.getText().toString());
+        deal.setPrice(txtPrice.getText().toString());
+        if(deal.getId()==null) {
+            mDatabaseReference.push().setValue(deal);
+        }
+        else {
+            mDatabaseReference.child(deal.getId()).setValue(deal);
 
+        }
+    }
+
+    private void deleteDeal() {
+        if (deal == null) {
+            Toast.makeText(this, "Please save the deal before deleting", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mDatabaseReference.child(deal.getId()).removeValue();
+
+        
+    }
+
+    private void backToList() {
+        Intent intent = new Intent(this, ListActivity.class);
+        startActivity(intent);
     }
 
 
@@ -80,7 +105,8 @@ public class DealActivity extends AppCompatActivity {
         txtTitle.requestFocus();
 
     }
-
-
-
 }
+
+
+
+
